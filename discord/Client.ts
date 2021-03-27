@@ -56,7 +56,7 @@ export class Client {
     }
   }
 
-  private markIntent(event: string, type: string): void {
+  private markIntent(event: string): void {
     if (
       event == "GUILD_CREATE" ||
       event == "GUILD_UPDATE" ||
@@ -72,8 +72,8 @@ export class Client {
       this.intents.GUILDS[0] = true;
     } else if (
       event == "GUILD_MEMBER_ADD" ||
-      event == "GUILD_MEMBER_ADD" ||
-      event == "GUILD_MEMBER_ADD"
+      event == "GUILD_MEMBER_UPDATE" ||
+      event == "GUILD_MEMBER_REMOVE"
     ) {
       this.intents.GUILD_MEMBERS[0] = true;
     } else if (event == "GUILD_BAN_ADD" || event == "GUILD_BAN_REMOVE") {
@@ -96,51 +96,73 @@ export class Client {
       event == "MESSAGE_DELETE" ||
       event == "MESSAGE_DELETE_BULK"
     ) {
-      if (type == "guild" || type == "all") {
-        this.intents.GUILD_MESSAGES[0] = true;
-      }
-
-      if (type == "dm" || type == "all") {
-        this.intents.DIRECT_MESSAGES[0] = true;
-      }
+      this.intents.GUILD_MESSAGES[0] = true;
+      this.intents.DIRECT_MESSAGES[0] = true;
+    } else if (
+      event == "GUILD_MESSAGE_CREATE" ||
+      event == "GUILD_MESSAGE_UPDATE" ||
+      event == "GUILD_MESSAGE_DELETE" ||
+      event == "GUILD_MESSAGE_DELETE_BULK"
+    ) {
+      this.intents.GUILD_MESSAGES[0] = true;
+    } else if (
+      event == "GUILD_MESSAGE_CREATE" ||
+      event == "GUILD_MESSAGE_UPDATE" ||
+      event == "GUILD_MESSAGE_DELETE" ||
+      event == "GUILD_MESSAGE_DELETE_BULK"
+    ) {
+      this.intents.DIRECT_MESSAGES[0] = true;
     } else if (
       event == "MESSAGE_REACTION_ADD" ||
       event == "MESSAGE_REACTION_REMOVE" ||
       event == "MESSAGE_REACTION_REMOVE_ALL" ||
       event == "MESSAGE_REACTION_REMOVE_EMOJI"
     ) {
-      if (type == "guild" || type == "all") {
-        this.intents.GUILD_MESSAGE_REACTIONS[0] = true;
-      }
-
-      if (type == "dm" || type == "all") {
-        this.intents.DIRECT_MESSAGE_REACTIONS[0] = true;
-      }
+      this.intents.GUILD_MESSAGE_REACTIONS[0] = true;
+      this.intents.DIRECT_MESSAGE_REACTIONS[0] = true;
+    } else if (
+      event == "GUILD_MESSAGE_REACTION_ADD" ||
+      event == "GUILD_MESSAGE_REACTION_REMOVE" ||
+      event == "GUILD_MESSAGE_REACTION_REMOVE_ALL" ||
+      event == "GUILD_MESSAGE_REACTION_REMOVE_EMOJI"
+    ) {
+      this.intents.GUILD_MESSAGE_REACTIONS[0] = true;
+    } else if (
+      event == "DM_MESSAGE_REACTION_ADD" ||
+      event == "DM_MESSAGE_REACTION_REMOVE" ||
+      event == "DM_MESSAGE_REACTION_REMOVE_ALL" ||
+      event == "DM_MESSAGE_REACTION_REMOVE_EMOJI"
+    ) {
+      this.intents.DIRECT_MESSAGE_REACTIONS[0] = true;
     } else if (event == "TYPING_START") {
-      if (type == "guild" || type == "all") {
-        this.intents.GUILD_MESSAGE_TYPING[0] = true;
-      }
-
-      if (type == "dm" || type == "all") {
-        this.intents.DIRECT_MESSAGE_TYPING[0] = true;
-      }
+      this.intents.GUILD_MESSAGE_TYPING[0] = true;
+      this.intents.DIRECT_MESSAGE_TYPING[0] = true;
+    } else if (event == "GUILD_TYPING_START") {
+      this.intents.GUILD_MESSAGE_TYPING[0] = true;
+    } else if (event == "DM_TYPING_START") {
+      this.intents.DIRECT_MESSAGE_TYPING[0] = true;
     }
   }
 
   public on(
+    event: "DM_MESSAGE_CREATE",
+    callback: (message: Message) => void
+  ): void;
+
+  public on(
+    event: "GUILD_MESSAGE_CREATE",
+    callback: (message: Message) => void
+  ): void;
+
+  public on(
     event: "MESSAGE_CREATE",
-    callback: (message: Message) => void,
-    opitons?: { type: "dm" | "guild" }
+    callback: (message: Message) => void
   ): void;
 
   public on(event: "READY", callback: () => void): void;
 
-  public on(
-    event: string,
-    callback: (data: any) => void,
-    opitons?: { type: "dm" | "guild" }
-  ) {
-    this.markIntent(event, opitons ? opitons.type : "all");
+  public on(event: string, callback: (data: any) => void) {
+    this.markIntent(event);
     this.eventCallbacks.set(event, callback);
   }
 
@@ -244,8 +266,6 @@ export class Client {
       if (using) intentNumber += number;
     }
 
-    console.log(intentNumber);
-
     const identify = {
       op: 2,
       d: {
@@ -293,6 +313,18 @@ export class Client {
         const callback = this.eventCallbacks.get(t);
 
         if (callback) callback(d);
+
+        if (t.startsWith("MESSAGE")) {
+          const message = d as Message;
+
+          if (message.member) {
+            const guildCallback = this.eventCallbacks.get("GUILD_" + t);
+            if (guildCallback) guildCallback(d);
+          } else {
+            const dmCallback = this.eventCallbacks.get("DM_" + t);
+            if (dmCallback) dmCallback(d);
+          }
+        }
       }
     });
   }
