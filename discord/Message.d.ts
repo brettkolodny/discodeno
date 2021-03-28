@@ -3,6 +3,7 @@ import { GuildMember } from "./GuildMember.d.ts";
 import { ChannelMention } from "./ChannelMention.d.ts";
 import { Attachment } from "./Attachment.d.ts";
 import { Embed } from "./Embed.d.ts";
+import { Reaction } from "./Reaction.d.ts";
 
 export interface Message {
   "id": string;
@@ -19,17 +20,58 @@ export interface Message {
   "mention_channels": ChannelMention[];
   "attachments": Attachment[];
   "embeds": Embed[];
-  //"reactions"?: Reaction[];
+  "reactions"?: Reaction[];
   "nonce": number | string;
   "pinned": boolean;
   "webhook_id"?: string;
   "type": number;
-  //"activity": MessageActivity;
-  //"application"?: MessageApplication;
+  "activity": MessageActivity;
+  "application"?: MessageApplication;
   "flags"?: number;
-  // "stickers": Sticker[];
+  "stickers": MessageSticker[];
   "referenced_message"?: Message;
-  // "interaction"?: MessageInteraction;
+  "interaction"?: MessageInteraction;
 }
 
-// interface Reaction
+export interface MessageActivity {
+  "type": number;
+  "party_id"?: string;
+}
+
+export interface MessageApplication {
+  "id": string;
+  "cover_image"?: string;
+  "description": string;
+  "icon": string | null;
+  "name": string;
+}
+
+export interface MessageSticker {
+  "id": string;
+  "pack_id": string;
+  "name": string;
+  "description": string;
+  "tags"?: string;
+  "asset": string;
+  "preview_asset"?: string;
+  "format_type": number;
+}
+
+declare enum Activity {
+  JOIN = 0,
+  SPECTATE,
+  LISTEN,
+  JOIN_REQUEST,
+}
+
+declare enum Interaction {
+  PING = 1,
+  ApplicationCommand,
+}
+
+export interface MessageInteraction {
+  "id": string;
+  "type": Interaction;
+  "name": string;
+  "user": User;
+}

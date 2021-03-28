@@ -1,5 +1,6 @@
 // deno-lint-ignore-file
 import { Message } from "./Message.d.ts";
+import { TypingStart } from "./TypingStart.d.ts";
 import { User } from "./User.d.ts";
 
 interface Intents {
@@ -146,17 +147,27 @@ export class Client {
 
   public on(
     event: "DM_MESSAGE_CREATE",
-    callback: (message: Message) => void
+    callback: (message: Message) => void,
   ): void;
 
   public on(
     event: "GUILD_MESSAGE_CREATE",
-    callback: (message: Message) => void
+    callback: (message: Message) => void,
   ): void;
 
   public on(
     event: "MESSAGE_CREATE",
-    callback: (message: Message) => void
+    callback: (message: Message) => void,
+  ): void;
+
+  public on(
+    event: "DM_TYPING_START",
+    callback: (typing: TypingStart) => void,
+  ): void;
+
+  public on(
+    event: "GUILD_TYPING_START",
+    callback: (typing: TypingStart) => void,
   ): void;
 
   public on(event: "READY", callback: () => void): void;
@@ -166,9 +177,9 @@ export class Client {
     this.eventCallbacks.set(event, callback);
   }
 
-  public send(message: Message, content: string): void {
+  public send(channelId: string, content: string): void {
     fetch(
-      `https://discord.com/api/v8/channels/${message.channel_id}/messages`,
+      `https://discord.com/api/v8/channels/${channelId}/messages`,
       {
         method: "POST",
         mode: "cors",
@@ -183,7 +194,7 @@ export class Client {
           tts: false,
           nonce: this.sequenceNumber++,
         }),
-      }
+      },
     );
   }
 
@@ -208,7 +219,7 @@ export class Client {
             channel_id: message.channel_id,
           },
         }),
-      }
+      },
     ).catch((reason) => console.log(reason));
   }
 
@@ -314,16 +325,20 @@ export class Client {
 
         if (callback) callback(d);
 
-        if (t.startsWith("MESSAGE")) {
-          const message = d as Message;
+        let data!: Message | TypingStart;
 
-          if (message.member) {
-            const guildCallback = this.eventCallbacks.get("GUILD_" + t);
-            if (guildCallback) guildCallback(d);
-          } else {
-            const dmCallback = this.eventCallbacks.get("DM_" + t);
-            if (dmCallback) dmCallback(d);
-          }
+        if (t.startsWith("MESSAGE")) {
+          data = d as Message;
+        } else if (t.startsWith("TYPING")) {
+          data = d as TypingStart;
+        }
+
+        if (data && data.member) {
+          const guildCallback = this.eventCallbacks.get("GUILD_" + t);
+          if (guildCallback) guildCallback(d);
+        } else {
+          const dmCallback = this.eventCallbacks.get("DM_" + t);
+          if (dmCallback) dmCallback(d);
         }
       }
     });
