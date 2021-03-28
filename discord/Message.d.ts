@@ -75,3 +75,15 @@ export interface MessageInteraction {
   "name": string;
   "user": User;
 }
+
+export interface MessageDelete {
+  "id": string;
+  "channel_id": string;
+  "guild_id"?: string;
+}
+
+export interface MessageDeleteBulk {
+  "ids": string[];
+  "channel_id": string;
+  "guild_id"?: string;
+}

@@ -1,7 +1,9 @@
 // deno-lint-ignore-file
-import { Message } from "./Message.d.ts";
+import { Message, MessageDelete, MessageDeleteBulk } from "./Message.d.ts";
+import { ReactionAdd, ReactionRemove } from "./Reaction.d.ts";
 import { TypingStart } from "./TypingStart.d.ts";
 import { User } from "./User.d.ts";
+import { Emoji } from "./Emoji.d.ts";
 
 interface Intents {
   GUILDS: [boolean, number];
@@ -107,10 +109,10 @@ export class Client {
     ) {
       this.intents.GUILD_MESSAGES[0] = true;
     } else if (
-      event == "GUILD_MESSAGE_CREATE" ||
-      event == "GUILD_MESSAGE_UPDATE" ||
-      event == "GUILD_MESSAGE_DELETE" ||
-      event == "GUILD_MESSAGE_DELETE_BULK"
+      event == "DM_MESSAGE_CREATE" ||
+      event == "DM_MESSAGE_UPDATE" ||
+      event == "DM_MESSAGE_DELETE" ||
+      event == "DM_MESSAGE_DELETE_BULK"
     ) {
       this.intents.DIRECT_MESSAGES[0] = true;
     } else if (
@@ -146,28 +148,47 @@ export class Client {
   }
 
   public on(
-    event: "DM_MESSAGE_CREATE",
+    event: "MESSAGE_CREATE" | "DM_MESSAGE_CREATE" | "GUILD_MESSAGE_CREATE",
     callback: (message: Message) => void,
   ): void;
 
   public on(
-    event: "GUILD_MESSAGE_CREATE",
+    event: "MESSAGE_UPDATE" | "DM_MESSAGE_UPDATE" | "GUILD_MESSAGE_UPDATE",
     callback: (message: Message) => void,
   ): void;
 
   public on(
-    event: "MESSAGE_CREATE",
-    callback: (message: Message) => void,
+    event: "MESSAGE_DELETE" | "DM_MESSAGE_DELETE" | "GUILD_MESSAGE_DELETE",
+    callback: (msgDelete: MessageDelete) => void,
   ): void;
 
   public on(
-    event: "DM_TYPING_START",
+    event:
+      | "MESSAGE_DELETE_BULK"
+      | "DM_MESSAGE_DELETE_BULK"
+      | "GUILD_MESSAGE_DELETE_BULK",
+    callback: (bulkDelete: MessageDeleteBulk) => void,
+  ): void;
+
+  public on(
+    event: "DM_TYPING_START" | "GUILD_TYPING_START",
     callback: (typing: TypingStart) => void,
   ): void;
 
   public on(
-    event: "GUILD_TYPING_START",
-    callback: (typing: TypingStart) => void,
+    event:
+      | "MESSAGE_REACTION_ADD"
+      | "DM_MESSAGE_REACTION_ADD"
+      | "GUILD_MESSAGE_REACTION_ADD",
+    callback: (reactionAdd: ReactionAdd) => void,
+  ): void;
+
+  public on(
+    event:
+      | "MESSAGE_REACTION_REMOVE"
+      | "DM_MESSAGE_REACTION_REMOVE"
+      | "GUILD_MESSAGE_REACTION_REMOVE",
+    callback: (reactionAdd: ReactionRemove) => void,
   ): void;
 
   public on(event: "READY", callback: () => void): void;
@@ -223,6 +244,22 @@ export class Client {
     ).catch((reason) => console.log(reason));
   }
 
+  public react(message: Message, emoji: string): void {
+    fetch(
+      `https://discord.com/api/v8/channels/${message.channel_id}/messages/${message.id}/reactions/${emoji}/@me`,
+      {
+        method: "PUT",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "omit",
+        headers: {
+          Authorization: `Bot ${this.token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  }
+
   private heartbeat() {
     if (this.socket.readyState == WebSocket.CLOSED) {
       setTimeout(() => {
@@ -273,7 +310,7 @@ export class Client {
 
     let intentNumber = 0;
 
-    for (let [using, number] of Object.values(this.intents)) {
+    for (const [using, number] of Object.values(this.intents)) {
       if (using) intentNumber += number;
     }
 
