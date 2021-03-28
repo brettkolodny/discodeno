@@ -28,10 +28,8 @@ export class Client {
   private sequenceNumber = 0;
   private sessionId = 0;
   private socket!: WebSocket;
-  user!: User;
   private heartbeatInterval!: number;
   private eventCallbacks: Map<string, (data: any) => void> = new Map();
-
   private intents: Intents = {
     GUILDS: [false, 1 << 0],
     GUILD_MEMBERS: [false, 1 << 1],
@@ -49,6 +47,11 @@ export class Client {
     DIRECT_MESSAGE_REACTIONS: [false, 1 << 13],
     DIRECT_MESSAGE_TYPING: [false, 1 << 14],
   };
+
+  /**
+   * The user information of the client.
+   */
+  public user!: User;
 
   /**
    * Creates a new client for the given token.
