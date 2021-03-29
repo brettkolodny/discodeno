@@ -1,4 +1,4 @@
-import { Client } from "../discord/mod.ts";
+import { Client, Embed } from "../discord/mod.ts";
 
 const client = new Client(Deno.env.get("DISCORD_TOKEN"));
 
@@ -30,10 +30,6 @@ client.on("MESSAGE_CREATE", (message) => {
   if (message.content == "fizz") {
     client.reaction.add(message, "🐝");
   }
-});
-
-client.command.on("blep", (command) => {
-  client.command.respond(command, "Cool");
 });
 
 client.on("READY", () => {

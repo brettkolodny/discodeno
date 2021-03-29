@@ -1,11 +1,13 @@
-import { Client } from "../discord/mod.ts";
+import { Client, ApplicationCommand } from "../discord/mod.ts";
 
 const client = new Client(Deno.env.get("DISCORD_TOKEN"));
 
-client.command.create({
-  "name": "ping",
-  "description": "A slash command",
-});
+const command: ApplicationCommand = {
+  name: "ping",
+  description: "A slash command"
+};
+
+client.command.create(command);
 
 client.command.on("ping", (command) => {
   client.command.respond(command, "pong!");
