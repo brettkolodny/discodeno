@@ -3,7 +3,8 @@ import { Message, MessageDelete, MessageDeleteBulk } from "./Message.d.ts";
 import { ReactionAdd, ReactionRemove } from "./Reaction.d.ts";
 import { TypingStart } from "./TypingStart.d.ts";
 import { User } from "./User.d.ts";
-import { Embed } from "./Embed.d.ts";
+import { ApplicationCommand } from "./ApplicationCommand.d.ts";
+import { Interaction } from "./Interaction.d.ts";
 
 interface Intents {
   GUILDS: [boolean, number];
@@ -30,6 +31,7 @@ export class Client {
   private socket!: WebSocket;
   private heartbeatInterval!: number;
   private eventCallbacks: Map<string, (data: any) => void> = new Map();
+  private commands: ApplicationCommand[] = [];
   private intents: Intents = {
     GUILDS: [false, 1 << 0],
     GUILD_MEMBERS: [false, 1 << 1],
@@ -58,12 +60,12 @@ export class Client {
    * @param token : The secret token of the bot account
    */
   constructor(token: string | undefined) {
-    if (token) {
-      this.token = token;
-    } else {
+    if (!token) {
       console.log("Invalid token");
       Deno.exit(1);
     }
+
+    this.token = token;
   }
 
   private markIntent(event: string): void {
@@ -339,6 +341,91 @@ export class Client {
     },
   };
 
+  private async clearCommands() {
+    let commands = await (await fetch(
+      `https://discord.com/api/v8/applications/${this.user.id}/commands`,
+      {
+        method: "GET",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "omit",
+        headers: {
+          Authorization: `Bot ${this.token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    )).json();
+
+    commands = commands as ApplicationCommand[];
+
+    for (const command of commands) {
+      await fetch(
+        `https://discord.com/api/v8/applications/${this.user.id}/commands/${command.id}`,
+        {
+          method: "DELETE",
+          mode: "cors",
+          cache: "no-cache",
+          credentials: "omit",
+          headers: {
+            Authorization: `Bot ${this.token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+  }
+
+  private async createCommands() {
+    for (const command of this.commands) {
+      await fetch(
+        `https://discord.com/api/v8/applications/${this.user.id}/commands`,
+        {
+          method: "POST",
+          mode: "cors",
+          cache: "no-cache",
+          credentials: "omit",
+          headers: {
+            Authorization: `Bot ${this.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(command),
+        },
+      );
+    }
+  }
+
+  public command = {
+    create: (command: ApplicationCommand) => {
+      this.commands.push(command);
+    },
+    on: (
+      commandName: string,
+      callback: (command: Interaction) => void,
+    ) => {
+      this.eventCallbacks.set(commandName, callback);
+    },
+    respond: (command: Interaction, content: string) => {
+      fetch(
+        `https://discord.com/api/v8/interactions/${command.id}/${command.token}/callback`,
+        {
+          method: "POST",
+          mode: "cors",
+          cache: "no-cache",
+          credentials: "omit",
+          headers: {
+            Authorization: `Bot ${this.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            "type": 4,
+            "data": {
+              "content": content,
+            },
+          }),
+        },
+      );
+    },
+  };
   private heartbeat() {
     if (this.socket.readyState == WebSocket.CLOSED) {
       setTimeout(() => {
@@ -377,6 +464,9 @@ export class Client {
         },
       })
     ).json();
+
+    await this.clearCommands();
+    await this.createCommands();
 
     const { url } = await (
       await fetch("https://www.discord.com/api/v8/gateway")
@@ -441,24 +531,32 @@ export class Client {
           this.sessionId = d["session_id"];
         }
 
-        const callback = this.eventCallbacks.get(t);
+        let eventName = t;
+        let eventData = d;
 
-        if (callback) callback(d);
+        if (t == "INTERACTION_CREATE") {
+          eventData = eventData as Interaction;
+          eventName = eventData.data.name;
+        }
+
+        const callback = this.eventCallbacks.get(eventName);
+
+        if (callback) callback(eventData);
 
         let data!: Message | TypingStart;
 
         if (t.startsWith("MESSAGE")) {
-          data = d as Message;
+          data = eventData as Message;
         } else if (t.startsWith("TYPING")) {
-          data = d as TypingStart;
+          data = eventData as TypingStart;
         }
 
         if (data && data.member) {
           const guildCallback = this.eventCallbacks.get("GUILD_" + t);
-          if (guildCallback) guildCallback(d);
+          if (guildCallback) guildCallback(eventData);
         } else {
           const dmCallback = this.eventCallbacks.get("DM_" + t);
-          if (dmCallback) dmCallback(d);
+          if (dmCallback) dmCallback(eventData);
         }
       }
     });

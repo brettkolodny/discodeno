@@ -32,6 +32,10 @@ client.on("MESSAGE_CREATE", (message) => {
   }
 });
 
+client.command.on("blep", (command) => {
+  client.command.respond(command, "Cool");
+});
+
 client.on("READY", () => {
   console.log(
     `Logged in as ${client.user.username}#${client.user.discriminator}`,
