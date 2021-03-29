@@ -295,8 +295,8 @@ export class Client {
     },
     /**
      * Edit a message.
-     * @param message The message to edit
-     * @param content The new contents of the message
+     * @param message : The message to edit
+     * @param content : The new contents of the message
      */
     edit: (message: Message, content: string) => {
       fetch(
@@ -395,9 +395,19 @@ export class Client {
   }
 
   public command = {
+    /**
+     * Creates a slash command registered to the client.
+     * @param command : The command to create
+     */
     create: (command: ApplicationCommand) => {
       this.commands.push(command);
     },
+
+    /**
+     * Define the client's behavior in response to a specific slash command. 
+     * @param commandName : The name of the command to respond to.
+     * @param callback : The function to call in response to the command.
+     */
     on: (
       commandName: string,
       callback: (command: Interaction) => void,
@@ -426,6 +436,7 @@ export class Client {
       );
     },
   };
+
   private heartbeat() {
     if (this.socket.readyState == WebSocket.CLOSED) {
       setTimeout(() => {
