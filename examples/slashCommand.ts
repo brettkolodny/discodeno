@@ -7,12 +7,9 @@ client.command.create({
   "description": "A slash command",
 });
 
-client.command.on(
-  "ping",
-  ((command) => {
-    client.command.respond(command, "pong!");
-  }),
-);
+client.command.on("ping", (command) => {
+  client.command.respond(command, "pong!");
+});
 
 client.on("READY", () => {
   console.log(
