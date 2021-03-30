@@ -1,10 +1,12 @@
-// deno-lint-ignore-file
-import { Message, MessageDelete, MessageDeleteBulk } from "./Message.d.ts";
-import { ReactionAdd, ReactionRemove } from "./Reaction.d.ts";
-import { TypingStart } from "./TypingStart.d.ts";
-import { User } from "./User.d.ts";
-import { ApplicationCommand } from "./ApplicationCommand.d.ts";
-import { Interaction } from "./Interaction.d.ts";
+import { MessageHandler } from "./MessageHandler.ts";
+import { ReactionHandler } from "./ReactionHandler.ts";
+import { CommandHandler } from "./CommandHandler.ts";
+import { Message, MessageDelete, MessageDeleteBulk } from "../Message.d.ts";
+import { ReactionAdd, ReactionRemove } from "../Reaction.d.ts";
+import { TypingStart } from "../TypingStart.d.ts";
+import { User } from "../User.d.ts";
+import { Interaction } from "../Interaction.d.ts";
+import { ApplicationCommand } from "../ApplicationCommand.d.ts";
 
 interface Intents {
   GUILDS: [boolean, number];
@@ -50,6 +52,10 @@ export class Client {
     DIRECT_MESSAGE_TYPING: [false, 1 << 14],
   };
 
+  public message: MessageHandler;
+  public reaction: ReactionHandler;
+  public command: CommandHandler;
+
   /**
    * The user information of the client.
    */
@@ -66,6 +72,19 @@ export class Client {
     }
 
     this.token = token;
+
+    const sequenceInc = () => {
+      return this.sequenceNumber++;
+    };
+
+    this.message = new MessageHandler(token, sequenceInc);
+    this.reaction = new ReactionHandler(token, sequenceInc);
+    this.command = new CommandHandler(
+      token,
+      sequenceInc,
+      this.eventCallbacks,
+      this.commands,
+    );
   }
 
   private markIntent(event: string): void {
@@ -163,6 +182,59 @@ export class Client {
     }
   }
 
+  private async clearCommands() {
+    let commands = await (await fetch(
+      `https://discord.com/api/v8/applications/${this.user.id}/commands`,
+      {
+        method: "GET",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "omit",
+        headers: {
+          Authorization: `Bot ${this.token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    )).json();
+
+    commands = commands as ApplicationCommand[];
+
+    for (const command of commands) {
+      await fetch(
+        `https://discord.com/api/v8/applications/${this.user.id}/commands/${command.id}`,
+        {
+          method: "DELETE",
+          mode: "cors",
+          cache: "no-cache",
+          credentials: "omit",
+          headers: {
+            Authorization: `Bot ${this.token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+  }
+
+  private async createCommands() {
+    for (const command of this.commands) {
+      await fetch(
+        `https://discord.com/api/v8/applications/${this.user.id}/commands`,
+        {
+          method: "POST",
+          mode: "cors",
+          cache: "no-cache",
+          credentials: "omit",
+          headers: {
+            Authorization: `Bot ${this.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(command),
+        },
+      );
+    }
+  }
+
   public on(
     event: "MESSAGE_CREATE" | "DM_MESSAGE_CREATE" | "GUILD_MESSAGE_CREATE",
     callback: (message: Message) => void,
@@ -218,224 +290,6 @@ export class Client {
     this.markIntent(event);
     this.eventCallbacks.set(event, callback);
   }
-
-  public message = {
-    /**
-     * Send a message to a channel.
-     * @param channelId : The channel to send the message in
-     * @param content : The content of the message
-     */
-    send: (channelId: string, content: string) => {
-      fetch(
-        `https://discord.com/api/v8/channels/${channelId}/messages`,
-        {
-          method: "POST",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            content: content,
-            tts: false,
-            nonce: this.sequenceNumber++,
-          }),
-        },
-      );
-    },
-    /**
-     * Reply to a message.
-     * @param message : The message to reply to
-     * @param content : The content of the reply
-     */
-    reply: (message: Message, content: string) => {
-      fetch(
-        `https://discord.com/api/v8/channels/${message.channel_id}/messages`,
-        {
-          method: "POST",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            content: content,
-            tts: false,
-            nonce: this.sequenceNumber++,
-            message_reference: {
-              message_id: message.id,
-              channel_id: message.channel_id,
-            },
-          }),
-        },
-      ).catch((reason) => console.log(reason));
-    },
-    /**
-     * Delete a message.
-     * @param message : The message to delete
-     */
-    delete: (message: Message) => {
-      fetch(
-        `https://discord.com/api/v8/channels/${message.channel_id}/messages/${message.id}`,
-        {
-          method: "DELETE",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      ).catch((reason) => console.log(reason));
-    },
-    /**
-     * Edit a message.
-     * @param message : The message to edit
-     * @param content : The new contents of the message
-     */
-    edit: (message: Message, content: string) => {
-      fetch(
-        `https://discord.com/api/v8/channels/${message.channel_id}/messages/${message.id}`,
-        {
-          method: "PATCH",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            content: content,
-          }),
-        },
-      ).then((res) => console.log(res)).catch((reason) => console.log(reason));
-    },
-  };
-
-  public reaction = {
-    /**
-     * 
-     * @param message: The message to add the reaction to
-     * @param emoji: The emoji to be used in the reaction
-     */
-    add: (message: Message, emoji: string): void => {
-      fetch(
-        `https://discord.com/api/v8/channels/${message.channel_id}/messages/${message.id}/reactions/${emoji}/@me`,
-        {
-          method: "PUT",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    },
-  };
-
-  private async clearCommands() {
-    let commands = await (await fetch(
-      `https://discord.com/api/v8/applications/${this.user.id}/commands`,
-      {
-        method: "GET",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "omit",
-        headers: {
-          Authorization: `Bot ${this.token}`,
-          "Content-Type": "application/json",
-        },
-      },
-    )).json();
-
-    commands = commands as ApplicationCommand[];
-
-    for (const command of commands) {
-      await fetch(
-        `https://discord.com/api/v8/applications/${this.user.id}/commands/${command.id}`,
-        {
-          method: "DELETE",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
-  }
-
-  private async createCommands() {
-    for (const command of this.commands) {
-      await fetch(
-        `https://discord.com/api/v8/applications/${this.user.id}/commands`,
-        {
-          method: "POST",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(command),
-        },
-      );
-    }
-  }
-
-  public command = {
-    /**
-     * Creates a slash command registered to the client.
-     * @param command : The command to create
-     */
-    create: (command: ApplicationCommand) => {
-      this.commands.push(command);
-    },
-
-    /**
-     * Define the client's behavior in response to a specific slash command. 
-     * @param commandName : The name of the command to respond to.
-     * @param callback : The function to call in response to the command.
-     */
-    on: (
-      commandName: string,
-      callback: (command: Interaction) => void,
-    ) => {
-      this.eventCallbacks.set(commandName, callback);
-    },
-    respond: (command: Interaction, content: string) => {
-      fetch(
-        `https://discord.com/api/v8/interactions/${command.id}/${command.token}/callback`,
-        {
-          method: "POST",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            "type": 4,
-            "data": {
-              "content": content,
-            },
-          }),
-        },
-      );
-    },
-  };
 
   private heartbeat() {
     if (this.socket.readyState == WebSocket.CLOSED) {
@@ -506,7 +360,7 @@ export class Client {
         properties: {
           $browser: "disco",
           $device: "computer",
-          $library: "notif",
+          $library: "discodeno",
         },
       },
       s: this.sequenceNumber++,
@@ -545,12 +399,14 @@ export class Client {
         let eventName = t;
         let eventData = d;
 
+        let callback;
+
         if (t == "INTERACTION_CREATE") {
           eventData = eventData as Interaction;
           eventName = eventData.data.name;
         }
 
-        const callback = this.eventCallbacks.get(eventName);
+        callback = this.eventCallbacks.get(eventName);
 
         if (callback) callback(eventData);
 

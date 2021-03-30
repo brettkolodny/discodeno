@@ -1,4 +1,4 @@
-import { Client, Embed } from "../discord/mod.ts";
+import { Client, Embed } from "../src/mod.ts";
 
 const client = new Client(Deno.env.get("DISCORD_TOKEN"));
 
