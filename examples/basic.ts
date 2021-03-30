@@ -1,4 +1,4 @@
-import { Client, Embed } from "../src/mod.ts";
+import { Client } from "../src/mod.ts";
 
 const client = new Client(Deno.env.get("DISCORD_TOKEN"));
 
@@ -32,6 +32,9 @@ client.on("MESSAGE_CREATE", (message) => {
   }
 });
 
+/**
+ * Execute the callback on the READY event.
+ */
 client.on("READY", () => {
   console.log(
     `Logged in as ${client.user.username}#${client.user.discriminator}`,

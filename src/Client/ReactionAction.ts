@@ -1,7 +1,7 @@
-import { AbstractHandler } from "./AbstractHandler.ts";
+import { AbstractAction } from "./AbstractAction.ts";
 import { Message } from "../Message.d.ts";
 
-export class ReactionHandler extends AbstractHandler {
+export class ReactionAction extends AbstractAction {
   /**
    * 
    * @param message: The message to add the reaction to

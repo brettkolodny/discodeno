@@ -1,7 +1,7 @@
 import { Message } from "../Message.d.ts";
-import { AbstractHandler } from "./AbstractHandler.ts";
+import { AbstractAction } from "./AbstractAction.ts";
 
-export class MessageHandler extends AbstractHandler {
+export class MessageAction extends AbstractAction {
   /**
    * Send a message to a channel.
    * @param channelId : The channel to send the message in

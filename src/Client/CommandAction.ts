@@ -1,8 +1,8 @@
-import { AbstractHandler } from "./AbstractHandler.ts";
+import { AbstractAction } from "./AbstractAction.ts";
 import { ApplicationCommand } from "../ApplicationCommand.d.ts";
 import { Interaction } from "../Interaction.d.ts";
 
-export class CommandHandler extends AbstractHandler {
+export class CommandAction extends AbstractAction {
   private commands: ApplicationCommand[];
   private eventCallbacks: Map<string, (data: any) => void>;
 
@@ -37,6 +37,11 @@ export class CommandHandler extends AbstractHandler {
     this.eventCallbacks.set(commandName, callback);
   }
 
+  /**
+   * Respond to a command sent by a user.
+   * @param command : The command to respond to
+   * @param content : The message to send as a response
+   */
   public respond(command: Interaction, content: string) {
     fetch(
       `https://discord.com/api/v8/interactions/${command.id}/${command.token}/callback`,

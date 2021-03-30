@@ -1,4 +1,4 @@
-export abstract class AbstractHandler {
+export abstract class AbstractAction {
   protected token: string;
   protected incrSequence: () => number;
 
