@@ -32,6 +32,7 @@ export class Client {
   private sessionId = 0;
   private socket!: WebSocket;
   private heartbeatInterval!: number;
+  // deno-lint-ignore no-explicit-any
   private eventCallbacks: Map<string, (data: any) => void> = new Map();
   private commands: ApplicationCommand[] = [];
   private intents: Intents = {
@@ -135,9 +136,10 @@ export class Client {
 
   /**
    * Define the client's behavior on specific events.
-   * @param event : The event that will trigger the callback
-   * @param callback : The callback to be run when the given event is triggered
+   * @param event The event that will trigger the callback
+   * @param callback The callback to be run when the given event is triggered
    */
+  // deno-lint-ignore no-explicit-any
   public on(event: string, callback: (data: any) => void) {
     this.markIntent(event);
     this.eventCallbacks.set(event, callback);
@@ -212,7 +214,8 @@ export class Client {
 
     this.socket.addEventListener("error", (error) => {
       console.log(error);
-      Deno.exit(1);
+      this.start();
+      // Deno.exit(1);
     });
 
     this.socket.addEventListener("message", (message) => {
@@ -228,33 +231,29 @@ export class Client {
         }
 
         let eventName = t;
-        let eventData = d;
-
-        let callback;
 
         if (t == "INTERACTION_CREATE") {
-          eventData = eventData as Interaction;
-          eventName = eventData.data.name;
+          eventName = (d as Interaction).data.name;
         }
 
-        callback = this.eventCallbacks.get(eventName);
+        const callback = this.eventCallbacks.get(eventName);
 
-        if (callback) callback(eventData);
+        if (callback) callback(d);
 
         let data!: Message | TypingStart;
 
         if (t.startsWith("MESSAGE")) {
-          data = eventData as Message;
+          data = d as Message;
         } else if (t.startsWith("TYPING")) {
-          data = eventData as TypingStart;
+          data = d as TypingStart;
         }
 
         if (data && data.member) {
           const guildCallback = this.eventCallbacks.get("GUILD_" + t);
-          if (guildCallback) guildCallback(eventData);
+          if (guildCallback) guildCallback(d);
         } else {
           const dmCallback = this.eventCallbacks.get("DM_" + t);
-          if (dmCallback) dmCallback(eventData);
+          if (dmCallback) dmCallback(d);
         }
       }
     });
@@ -394,24 +393,50 @@ export class Client {
     commands = commands as ApplicationCommand[];
 
     for (const command of commands) {
-      await fetch(
-        `https://discord.com/api/v8/applications/${this.user.id}/commands/${command.id}`,
-        {
-          method: "DELETE",
-          mode: "cors",
-          cache: "no-cache",
-          credentials: "omit",
-          headers: {
-            Authorization: `Bot ${this.token}`,
-            "Content-Type": "application/json",
+      if (
+        this.commands.filter((value) => value.name === command.name).length
+      ) {
+        console.log("update");
+        await fetch(
+          `https://discord.com/api/v8/applications/${this.user.id}/commands`,
+          {
+            method: "POST",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "omit",
+            headers: {
+              Authorization: `Bot ${this.token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(command),
           },
-        },
-      );
+        );
+
+        this.commands = this.commands.filter((value) =>
+          value.name != command.name
+        );
+      } else {
+        console.log("delete");
+        await fetch(
+          `https://discord.com/api/v8/applications/${this.user.id}/commands/${command.id}`,
+          {
+            method: "DELETE",
+            mode: "cors",
+            cache: "no-cache",
+            credentials: "omit",
+            headers: {
+              Authorization: `Bot ${this.token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+      }
     }
   }
 
   private async createCommands() {
     for (const command of this.commands) {
+      console.log("create");
       await fetch(
         `https://discord.com/api/v8/applications/${this.user.id}/commands`,
         {

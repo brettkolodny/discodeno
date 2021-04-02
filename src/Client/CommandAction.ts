@@ -4,11 +4,13 @@ import { Interaction } from "../Interaction.d.ts";
 
 export class CommandAction extends AbstractAction {
   private commands: ApplicationCommand[];
+  // deno-lint-ignore no-explicit-any
   private eventCallbacks: Map<string, (data: any) => void>;
 
   constructor(
     token: string,
     incrSequence: () => number,
+    // deno-lint-ignore no-explicit-any
     callbacks: Map<string, (data: any) => void>,
     commands: ApplicationCommand[],
   ) {
