@@ -1,5 +1,5 @@
 import { AbstractAction } from "./AbstractAction.ts";
-import { Message } from "../Message.d.ts";
+import { Message } from "../types/Message.d.ts";
 
 export class ReactionAction extends AbstractAction {
   /**

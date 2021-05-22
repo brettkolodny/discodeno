@@ -1,6 +1,6 @@
 import { AbstractAction } from "./AbstractAction.ts";
-import { ApplicationCommand } from "../ApplicationCommand.d.ts";
-import { Interaction } from "../Interaction.d.ts";
+import { ApplicationCommand } from "../types/ApplicationCommand.d.ts";
+import { Interaction } from "../types/Interaction.d.ts";
 
 export class CommandAction extends AbstractAction {
   private commands: ApplicationCommand[];

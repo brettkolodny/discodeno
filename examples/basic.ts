@@ -1,4 +1,5 @@
 import { Client } from "../src/mod.ts";
+import { ChannelType } from "../src/types/ChannelType.ts";
 
 const client = new Client(Deno.env.get("DISCORD_TOKEN"));
 
@@ -10,6 +11,7 @@ client.on("DM_MESSAGE_CREATE", (message) => {
   if (message.content === "ping") {
     client.message.reply(message, "pong");
   }
+
 });
 
 /**

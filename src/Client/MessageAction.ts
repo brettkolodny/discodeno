@@ -1,4 +1,4 @@
-import { Message } from "../Message.d.ts";
+import { Message } from "../types/Message.d.ts";
 import { AbstractAction } from "./AbstractAction.ts";
 
 export class MessageAction extends AbstractAction {

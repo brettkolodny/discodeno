@@ -8,6 +8,7 @@ import { Reaction } from "./Reaction.d.ts";
 export interface Message {
   "id": string;
   "channel_id": string;
+  "guild_id"?: string;
   "author": User;
   "member"?: GuildMember;
   "content": string;

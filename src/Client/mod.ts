@@ -1,12 +1,13 @@
 import { MessageAction } from "./MessageAction.ts";
 import { ReactionAction } from "./ReactionAction.ts";
 import { CommandAction } from "./CommandAction.ts";
-import { Message, MessageDelete, MessageDeleteBulk } from "../Message.d.ts";
-import { ReactionAdd, ReactionRemove } from "../Reaction.d.ts";
-import { TypingStart } from "../TypingStart.d.ts";
-import { User } from "../User.d.ts";
-import { Interaction } from "../Interaction.d.ts";
-import { ApplicationCommand } from "../ApplicationCommand.d.ts";
+import { GuildAction } from "./GuildAction.ts";
+import { Message, MessageDelete, MessageDeleteBulk } from "../types/Message.d.ts";
+import { ReactionAdd, ReactionRemove } from "../types/Reaction.d.ts";
+import { TypingStart } from "../types/TypingStart.d.ts";
+import { User } from "../types/User.d.ts";
+import { Interaction } from "../types/Interaction.d.ts";
+import { ApplicationCommand } from "../types/ApplicationCommand.d.ts";
 
 interface Intents {
   GUILDS: [boolean, number];
@@ -56,6 +57,7 @@ export class Client {
   public message: MessageAction;
   public reaction: ReactionAction;
   public command: CommandAction;
+  public guild: GuildAction;
 
   /**
    * The user information of the client.
@@ -86,6 +88,7 @@ export class Client {
       this.eventCallbacks,
       this.commands,
     );
+    this.guild = new GuildAction(token, sequenceInc);
   }
 
   public on(
