@@ -22,46 +22,52 @@ interface ModifyChannelPositionOptions {
 
 export class GuildAction extends AbstractAction {
   async get(guildId: string): Promise<Guild | null> {
-    const response = await fetch(`https://discord.com/api/v9/guilds/${guildId}`, {
-      headers: {
-        Authorization: `Bot ${this.token}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `https://discord.com/api/v9/guilds/${guildId}`,
+      {
+        headers: {
+          Authorization: `Bot ${this.token}`,
+        },
       },
-    });
+    );
 
     if (response.ok) {
-        const guild: Guild = await response.json();
-        return guild;
+      const guild: Guild = await response.json();
+      return guild;
     } else {
-        return null;
+      return null;
     }
   }
 
   async createChannel(guildId: string, options: CreateChannelOptions) {
     await fetch(`https://discord.com/api/v9/guilds/${guildId}/channels`, {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "omit",
-        headers: {
-          Authorization: `Bot ${this.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: options.name,
-          type: options.type,
-          topic: options.topic,
-          rate_limit_per_user: options.rateLimit,
-          user_limit: options.userLimit,
-          position: options.position,
-          parent_id: options.parentId,
-          nsfw: options.nsfw,
-          bitrate: options.bitrate
-        }),
-      });
+      method: "POST",
+      mode: "cors",
+      cache: "no-cache",
+      credentials: "omit",
+      headers: {
+        Authorization: `Bot ${this.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: options.name,
+        type: options.type,
+        topic: options.topic,
+        rate_limit_per_user: options.rateLimit,
+        user_limit: options.userLimit,
+        position: options.position,
+        parent_id: options.parentId,
+        nsfw: options.nsfw,
+        bitrate: options.bitrate,
+      }),
+    });
   }
 
-  async modifyChannelPosition(guildId: string, channelId: string, options: ModifyChannelPositionOptions) {
+  async modifyChannelPosition(
+    guildId: string,
+    channelId: string,
+    options: ModifyChannelPositionOptions,
+  ) {
     await fetch(`https://discord.com/api/v9/guilds/${guildId}/channels`, {
       method: "PATCH",
       mode: "cors",
@@ -74,9 +80,11 @@ export class GuildAction extends AbstractAction {
       body: JSON.stringify([{
         id: channelId,
         position: options.position ? options.position : null,
-        lock_permissions: options.lockPermissions ? options.lockPermissions : null,
+        lock_permissions: options.lockPermissions
+          ? options.lockPermissions
+          : null,
         parent_id: options.parentId ? options.parentId : null,
       }]),
-    }).then(value => console.log(value));
+    }).then((value) => console.log(value));
   }
 }

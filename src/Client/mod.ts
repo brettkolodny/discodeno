@@ -2,7 +2,12 @@ import { MessageAction } from "./MessageAction.ts";
 import { ReactionAction } from "./ReactionAction.ts";
 import { CommandAction } from "./CommandAction.ts";
 import { GuildAction } from "./GuildAction.ts";
-import { Message, MessageDelete, MessageDeleteBulk } from "../types/Message.d.ts";
+import { ChannelAction } from "./ChannelAction.ts";
+import {
+  Message,
+  MessageDelete,
+  MessageDeleteBulk,
+} from "../types/Message.d.ts";
 import { ReactionAdd, ReactionRemove } from "../types/Reaction.d.ts";
 import { TypingStart } from "../types/TypingStart.d.ts";
 import { User } from "../types/User.d.ts";
@@ -58,6 +63,7 @@ export class Client {
   public reaction: ReactionAction;
   public command: CommandAction;
   public guild: GuildAction;
+  public channel: ChannelAction;
 
   /**
    * The user information of the client.
@@ -82,6 +88,7 @@ export class Client {
 
     this.message = new MessageAction(token, sequenceInc);
     this.reaction = new ReactionAction(token, sequenceInc);
+    this.channel = new ChannelAction(token, sequenceInc);
     this.command = new CommandAction(
       token,
       sequenceInc,

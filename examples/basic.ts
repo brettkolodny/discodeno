@@ -11,7 +11,6 @@ client.on("DM_MESSAGE_CREATE", (message) => {
   if (message.content === "ping") {
     client.message.reply(message, "pong");
   }
-
 });
 
 /**
