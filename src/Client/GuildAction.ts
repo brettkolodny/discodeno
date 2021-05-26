@@ -1,6 +1,7 @@
 import { AbstractAction } from "./AbstractAction.ts";
 import { Guild } from "../types/Guild.d.ts";
 import { ChannelType } from "../types/ChannelType.ts";
+import { Channel } from "../types/Channel.d.ts";
 
 interface CreateChannelOptions {
   name: string;
@@ -32,15 +33,28 @@ export class GuildAction extends AbstractAction {
     );
 
     if (response.ok) {
-      const guild: Guild = await response.json();
-      return guild;
+      return await response.json();
     } else {
       return null;
     }
   }
 
-  async createChannel(guildId: string, options: CreateChannelOptions) {
-    await fetch(`https://discord.com/api/v9/guilds/${guildId}/channels`, {
+  async getChannels(guildId: string): Promise<Channel[] | null> {
+    const response = await fetch(`https://discord.com/api/v9/guilds/${guildId}/channels`, {
+      headers: {
+        Authorization: `Bot ${this.token}`,
+        "Content-Type": "application/json",
+      }});
+
+    if (response.ok) {
+      return await response.json()
+    } else {
+      return null;
+    }
+  }
+  
+  async createChannel(guildId: string, options: CreateChannelOptions): Promise<Channel | null> {
+    const response = await fetch(`https://discord.com/api/v9/guilds/${guildId}/channels`, {
       method: "POST",
       mode: "cors",
       cache: "no-cache",
@@ -61,6 +75,12 @@ export class GuildAction extends AbstractAction {
         bitrate: options.bitrate,
       }),
     });
+
+    if (response.ok) {
+      return await response.json()
+    } else {
+      return null;
+    }
   }
 
   async modifyChannelPosition(

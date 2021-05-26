@@ -1,4 +1,5 @@
 import { Message } from "../types/Message.d.ts";
+import { Embed } from "../types/Embed.d.ts";
 import { AbstractAction } from "./AbstractAction.ts";
 
 export class MessageAction extends AbstractAction {
@@ -7,7 +8,7 @@ export class MessageAction extends AbstractAction {
    * @param channelId : The channel to send the message in
    * @param content : The content of the message
    */
-  public send(channelId: string, content: string) {
+  public send(channelId: string, content: string, embed: Embed | null = null) {
     fetch(
       `https://discord.com/api/v8/channels/${channelId}/messages`,
       {
@@ -20,9 +21,10 @@ export class MessageAction extends AbstractAction {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: content,
+          content,
           tts: false,
           nonce: this.incrSequence(),
+          embed,
         }),
       },
     );
