@@ -40,44 +40,54 @@ export class GuildAction extends AbstractAction {
   }
 
   async getChannels(guildId: string): Promise<Channel[] | null> {
-    const response = await fetch(`https://discord.com/api/v9/guilds/${guildId}/channels`, {
-      headers: {
-        Authorization: `Bot ${this.token}`,
-        "Content-Type": "application/json",
-      }});
+    const response = await fetch(
+      `https://discord.com/api/v9/guilds/${guildId}/channels`,
+      {
+        headers: {
+          Authorization: `Bot ${this.token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
     if (response.ok) {
-      return await response.json()
+      return await response.json();
     } else {
       return null;
     }
   }
-  
-  async createChannel(guildId: string, options: CreateChannelOptions): Promise<Channel | null> {
-    const response = await fetch(`https://discord.com/api/v9/guilds/${guildId}/channels`, {
-      method: "POST",
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "omit",
-      headers: {
-        Authorization: `Bot ${this.token}`,
-        "Content-Type": "application/json",
+
+  async createChannel(
+    guildId: string,
+    options: CreateChannelOptions,
+  ): Promise<Channel | null> {
+    const response = await fetch(
+      `https://discord.com/api/v9/guilds/${guildId}/channels`,
+      {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "omit",
+        headers: {
+          Authorization: `Bot ${this.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: options.name,
+          type: options.type,
+          topic: options.topic,
+          rate_limit_per_user: options.rateLimit,
+          user_limit: options.userLimit,
+          position: options.position,
+          parent_id: options.parentId,
+          nsfw: options.nsfw,
+          bitrate: options.bitrate,
+        }),
       },
-      body: JSON.stringify({
-        name: options.name,
-        type: options.type,
-        topic: options.topic,
-        rate_limit_per_user: options.rateLimit,
-        user_limit: options.userLimit,
-        position: options.position,
-        parent_id: options.parentId,
-        nsfw: options.nsfw,
-        bitrate: options.bitrate,
-      }),
-    });
+    );
 
     if (response.ok) {
-      return await response.json()
+      return await response.json();
     } else {
       return null;
     }

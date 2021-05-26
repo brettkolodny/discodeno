@@ -14,50 +14,50 @@ export interface Embed {
   "fields"?: EmbedField[];
 }
 
-interface EmbedFooter {
+export interface EmbedFooter {
   "text": string;
   "icon_url"?: string;
   "proxy_icon_url"?: string;
 }
 
-interface EmbedProvider {
+export interface EmbedProvider {
   "name"?: string;
   "url"?: string;
 }
 
-interface EmbedAuthor {
+export interface EmbedAuthor {
   "name"?: string;
   "url"?: string;
   "icon_url"?: string;
   "proxy_icon_url"?: string;
 }
 
-interface EmbedField {
+export interface EmbedField {
   "name": string;
   "value": string;
   "inline"?: boolean;
 }
 
-interface EmbedProvider {
+export interface EmbedProvider {
   "name"?: string;
   "url"?: string;
 }
 
-interface EmbedVideo {
+export interface EmbedVideo {
   "url?": string;
   "proxy_url"?: string;
   "height"?: number;
   "width"?: number;
 }
 
-interface EmbedImage {
+export interface EmbedImage {
   "url?": string;
   "proxy_url"?: string;
   "height"?: number;
   "width"?: number;
 }
 
-interface EmbedThumbnail {
+export interface EmbedThumbnail {
   "url?": string;
   "proxy_url"?: string;
   "height"?: number;

@@ -10,7 +10,7 @@ export class ChannelAction extends AbstractAction {
         headers: {
           Authorization: `Bot ${this.token}`,
         },
-      }
+      },
     );
 
     if (response.ok) {
@@ -36,7 +36,7 @@ export class ChannelAction extends AbstractAction {
         headers: {
           Authorization: `Bot ${this.token}`,
         },
-      }
+      },
     );
 
     if (response.ok) {

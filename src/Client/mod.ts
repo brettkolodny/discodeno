@@ -3,17 +3,18 @@ import { ReactionAction } from "./ReactionAction.ts";
 import { CommandAction } from "./CommandAction.ts";
 import { GuildAction } from "./GuildAction.ts";
 import { ChannelAction } from "./ChannelAction.ts";
+import { UserAction } from "./UserAction.ts";
 import {
+  ApplicationCommand,
+  Interaction,
   Message,
   MessageDelete,
   MessageDeleteBulk,
-} from "../types/Message.d.ts";
-import { ReactionAdd, ReactionRemove } from "../types/Reaction.d.ts";
-import { TypingStart } from "../types/TypingStart.d.ts";
-import { User } from "../types/User.d.ts";
-import { Interaction } from "../types/Interaction.d.ts";
-import { ApplicationCommand } from "../types/ApplicationCommand.d.ts";
-import { UserAction } from "./UserAction.ts";
+  ReactionAdd,
+  ReactionRemove,
+  TypingStart,
+  User,
+} from "../types/mod.ts";
 
 interface Intents {
   GUILDS: [boolean, number];
@@ -34,7 +35,7 @@ interface Intents {
 }
 
 interface IdentifyPayload {
-  op: number,
+  op: number;
   d: {
     token: string;
     intents: number;
@@ -42,7 +43,7 @@ interface IdentifyPayload {
       $browser: string;
       $device: string;
       $library: string;
-    }
+    };
   };
   s: number;
   t: string;
@@ -304,10 +305,10 @@ export class Client {
       d: {
         token: this.token,
         session_id: this.sessionId,
-        seq: this.sequenceNumber
-      }
+        seq: this.sequenceNumber,
+      },
     };
-    
+
     this.socket.send(JSON.stringify(payload));
   }
 

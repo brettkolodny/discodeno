@@ -1,5 +1,4 @@
 import { Client } from "../src/mod.ts";
-import { ChannelType } from "../src/types/ChannelType.ts";
 
 const client = new Client(Deno.env.get("DISCORD_TOKEN"));
 
@@ -38,7 +37,7 @@ client.on("MESSAGE_CREATE", (message) => {
  */
 client.on("READY", () => {
   console.log(
-    `Logged in as ${client.user.username}#${client.user.discriminator}`,
+    `Logged in as ${client.bot.username}#${client.bot.discriminator}`,
   );
 });
 
