@@ -1,4 +1,4 @@
-import { Client } from "../src/mod.ts";
+import { Client } from "../mod.ts";
 
 const client = new Client(Deno.env.get("DISCORD_TOKEN"));
 
